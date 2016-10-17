@@ -1,0 +1,60 @@
+#!/bin/bash
+# Chromebook lenovo 11e GalliumOS/Xubuntu Tools
+#
+# This script toggles to/from tablet mode by 
+# -rotating the screen and touchscreen input 180 degrees  
+# -disables the touchpad
+# -enables the virtual keyboard (onboard)
+
+# created by sargantana
+
+#### configuration
+# define Touchscreen and Touchpad device ID or name with xinput in a terminal / defined for 11e
+TouchscreenDevice='Atmel maXTouch Touchscreen'
+TouchpadDevice='Elan Touchpad'
+
+if [ "$1" = "--help"  ] || [ "$1" = "-h"  ] ; then
+echo 'Usage: screen180.sh [OPTION]'
+echo 'This script toggles to/from tablet mode by' 
+echo '-rotating the screen and touchscreen input 180 degrees'  
+echo '-disables the touchpad'
+echo '-enables the virtual keyboard (onboard)'
+
+echo Usage:
+echo ' -j rotates by 180 degrees for tablet mode'
+echo ' -n always rotates the screen back to normal'
+exit 0
+fi
+
+touchpadEnabled=$(xinput --list-props "$TouchpadDevice" | awk '/Device Enabled/{print $NF}')
+screenMatrix=$(xinput --list-props "$TouchscreenDevice" | awk '/Coordinate Transformation Matrix/{print $5$6$7$8$9$10$11$12$NF}')
+
+# Matrix for Touchpad input rotation
+# ⎡ 1 0 0 ⎤
+# ⎜ 0 1 0 ⎥
+# ⎣ 0 0 1 ⎦
+normal='1 0 0 0 1 0 0 0 1'
+normal_float='1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000'
+
+#⎡ -1  0 1 ⎤
+#⎜  0 -1 1 ⎥
+#⎣  0  0 1 ⎦
+inverted='-1 0 1 0 -1 1 0 0 1'
+inverted_float='-1.000000,0.000000,1.000000,0.000000,-1.000000,1.000000,0.000000,0.000000,1.000000'
+
+if [ $screenMatrix == $normal_float ] && [ "$1" != "-n" ]
+then
+  echo "Upside down"
+  xrandr -o inverted
+  xinput set-prop "$TouchscreenDevice" 'Coordinate Transformation Matrix' $inverted
+  xinput disable "$TouchpadDevice"
+  onboard &
+elif [ $screenMatrix == $inverted_float ] && [ "$1" != "-j" ] && [ "$1" != "-n" ]
+
+else
+  echo "Back to normal"
+  xrandr -o normal
+  xinput set-prop "$TouchscreenDevice" 'Coordinate Transformation Matrix' $normal
+  xinput enable "$TouchpadDevice" 
+  killall onboard
+fi
