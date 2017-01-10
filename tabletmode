@@ -1,0 +1,87 @@
+#!/bin/bash
+# Chromebook lenovo 11e GalliumOS/Xubuntu Tools
+#
+# This script toggles to/from tablet mode by
+# -rotating the screen and touchscreen input 180 degrees
+# -disables the touchpad
+# -enables the virtual keyboard (onboard)
+
+# created by sargantana
+
+#### configuration
+# define Touchscreen and Touchpad device ID or name with xinput in a terminal /predefined forlenovo chromebook yoga 11e
+TouchscreenDevice='Atmel maXTouch Touchscreen'
+TouchpadDevice='Elan Touchpad'
+
+if [ "$1" = "--help"  ] || [ "$1" = "-h"  ] ; then
+echo 'Usage: tts.sh [OPTION]'
+echo 'This script toggles to/from tablet mode by'
+echo '-rotating the screen and touchscreen input 180 degrees'
+echo '-disables the touchpad'
+echo '-enables the virtual keyboard (onboard)'
+
+echo Usage:
+echo ' -t rotates by 180 degrees for tablet mode'
+echo ' -n always rotates the screen back to normal'
+exit 0
+fi
+
+touchpadEnabled=$(xinput --list-props "$TouchpadDevice" | awk '/Device Enabled/{print $NF}')
+screenMatrix=$(xinput --list-props "$TouchscreenDevice" | awk '/Coordinate Transformation Matrix/{print $5$6$7$8$9$10$11$12$NF}')
+
+# Matrix for Touchpad input rotation
+# ⎡ 1 0 0 ⎤
+# ⎜ 0 1 0 ⎥
+# ⎣ 0 0 1 ⎦
+normal='1 0 0 0 1 0 0 0 1'
+normal_float='1.000000,0.000000,0.000000,0.000000,1.000000,0.000000,0.000000,0.000000,1.000000'
+
+#⎡ -1  0 1 ⎤
+#⎜  0 -1 1 ⎥
+#⎣  0  0 1 ⎦
+inverted='-1 0 1 0 -1 1 0 0 1'
+inverted_float='-1.000000,0.000000,1.000000,0.000000,-1.000000,1.000000,0.000000,0.000000,1.000000'
+
+if [ "$1" = "-t"];then
+	if [ $screenMatrix == $normal_float ]
+		then
+  			echo "Upside down"
+  			xrandr -o inverted
+  			xinput set-prop "$TouchscreenDevice" 'Coordinate Transformation Matrix' $inverted
+  			xinput disable "$TouchpadDevice"
+  			xinput float 13
+  			onboard &
+	else
+  		echo "Back to normal"
+  		xrandr -o normal
+  		xinput set-prop "$TouchscreenDevice" 'Coordinate Transformation Matrix' $normal
+  		xinput enable "$TouchpadDevice" 
+  		xinput reattach 13 3  
+ 		killall onboard
+fi
+
+if [ "$1" = "-a"]
+	then
+		#touchscreen aus
+	else
+		#touchscreen ein
+fi
+
+if [ "$1" = "-e" ]
+	then
+		pulse sset -D master 5%-
+	else
+
+fi
+
+if [ "$1" = "-a"] 
+	then 
+		pulse sset -D master 5%=
+	else
+	
+
+
+
+
+
+
