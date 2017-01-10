@@ -60,28 +60,22 @@ if [ "$1" = "-t"];then
  		killall onboard
 fi
 
-if [ "$1" = "-a"]
-	then
-		#touchscreen aus
-	else
-		#touchscreen ein
-fi
-
-if [ "$1" = "-e" ]
-	then
-		pulse sset -D master 5%-
-	else
-
-fi
-
-if [ "$1" = "-a"] 
-	then 
-		pulse sset -D master 5%=
-	else
-	
-
-
-
-
-
-
+#if [ "$1" = "-a"]
+#	then
+#		#touchscreen aus
+#	else
+#		#touchscreen ein
+#fi
+#
+#if [ "$1" = "-e" ]
+#	then
+#		pulse sset -D master 5%-
+#	else
+#
+#fi
+#
+#if [ "$1" = "-a"] 
+#	then 
+#		pulse sset -D master 5%=
+#	else
+#	
