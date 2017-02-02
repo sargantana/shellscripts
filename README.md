@@ -14,8 +14,8 @@ This is just a collection of shell scripts I wrote over the time.
 
 **toolset.sh**
 
-> Shellscript to rotate screen and touchscreen input by 180 degrees. also allows to deactivate keyboard. Added features like ebook > mode to use laptop in portrait mode including activating and deactivating keyboard, touchpad and other stuff.
-> also includes flag to increase and decrese volume
+> Shellscript to rotate screen and touchscreen input by 180 degrees. also allows to deactivate keyboard. Added features like ebook  mode to use laptop in portrait mode including activating and deactivating keyboard, touchpad and other stuff.
+ also includes flag to increase and decrese volume
 
 **utd.sh**
 
