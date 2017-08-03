@@ -1,0 +1,129 @@
+#Audio visualisation script
+#
+#Created for Blender 2.71
+#Modified for Blender 2.76
+#Modified for Blender 2.77
+#
+#Feel free to modify this script to suit your needs
+
+import bpy
+import math
+
+#Here are the variables you can change if you want to quickly
+#change your result
+#================================================================================
+#================================================================================
+filename = "file_name.mp3"   #of course you can use other formats than mp3
+filepath = "path"   
+#always use two backslashes \\ instead of one \ 
+#Example:  "C:\\Users\\User\\Desktop"
+                        
+                        
+deleteSoundInSequencer = True  #Delete the sound strip currently in blender?                  
+addSoundToSequencer = True  #Import the sound strip into blender?
+
+startFrame = 1 #The frame on which to start the song
+
+bars = 64 #number of bars
+hScale = 8.0 #vertical scale of the bars
+width = 0.8 #width scale of the bars
+xDist = 2.25 #horizontal distance between bars (for non-radial vosualiser)
+
+radial = False #True if you want the visualiser to be radial, false otherwise
+radius = 20.0 #Radius of the circle
+#================================================================================
+#================================================================================
+
+
+
+#full path and name
+filepathAndName = filepath + "\\" + filename
+
+#Set the window context to the sequencer
+bpy.context.area.type = 'SEQUENCE_EDITOR'
+
+#Delete sound strip
+if deleteSoundInSequencer:
+    bpy.ops.sequencer.select_all(action='SELECT')
+    bpy.ops.sequencer.delete()
+
+#Add sound strip
+if addSoundToSequencer:
+    bpy.ops.sequencer.sound_strip_add(filepath=filepathAndName,frame_start=startFrame, channel=1)
+
+
+#Set the window context to the Default 3D window 
+bpy.context.area.type = 'VIEW_3D'
+#Set Keyframe and Cursor location to default
+bpy.data.scenes["Scene"].frame_current=startFrame
+bpy.context.scene.cursor_location=(0,0,0)
+
+
+#Number of half steps each bar will cover (approximately)
+noteStep = 120.0/bars
+
+#Twelfth root of 2
+a = 2**(1.0/12.0)
+
+#start frequencies
+l = 0.0
+h = 16.0
+
+print('--------------------')
+
+#Iterate through the number of bars
+for i in range(0, bars):
+    #Add a plane and set it's origin to one of its edges
+    bpy.ops.mesh.primitive_plane_add(location = (0, 1, 0))
+    bpy.context.scene.cursor_location = bpy.context.active_object.location
+    bpy.context.scene.cursor_location.y -= 1
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    
+    loc = [0.0, 0.0, 0.0]
+    
+    #If this is a radial visualiser
+    if radial:
+        #Rotate bars in equal angles around circle with given radius
+        angle = -2*i*math.pi/(bars)
+        bpy.context.active_object.rotation_euler[2] = angle
+        loc = [-math.sin(angle)*radius, math.cos(angle)*radius, 0]
+    else:
+        loc[0] = i*xDist
+    
+    #Set the bar's corrent clocation
+    bpy.context.active_object.location = (loc[0], loc[1], loc[2])
+    #Set origin to one of its edges again
+    bpy.context.scene.cursor_location = (loc[0], loc[1], loc[2])
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    
+    #Scale the plane on the x and y axis, then apply the transformation
+    bpy.context.active_object.scale.x = width
+    bpy.context.active_object.scale.y = hScale
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    
+    #Insert a scaling keyframe and lock the x and z axis
+    bpy.ops.anim.keyframe_insert_menu(type='Scaling')
+    bpy.context.active_object.animation_data.action.fcurves[0].lock = True
+    bpy.context.active_object.animation_data.action.fcurves[2].lock = True
+    
+    #Set the window context to the graph editor
+    bpy.context.area.type = 'GRAPH_EDITOR'
+    
+    #Expression to determine the frequency ranges of the bars
+    l = h
+    h = l*(a**noteStep)
+    
+    #Print the current bar and frequency range to the console/terminal
+    print('Bar ' + str(i) + ': ' + str(l) + ' to ' + str(h))
+    
+    #Bake that range of frequencies to the current plane (along the y axis)
+    bpy.ops.graph.sound_bake(filepath=filepathAndName, low = (l), high = (h))
+    
+    #Lock the y axis
+    bpy.context.active_object.animation_data.action.fcurves[1].lock = True
+
+#Change Back to Text Editor to change Equalizer Settings
+bpy.context.area.type = 'TEXT_EDITOR'
+
+#Set Animation time to song length
+bpy.context.scene.frame_end = bpy.context.scene.sequence_editor.sequences_all[filename].frame_final_duration + startFrame
